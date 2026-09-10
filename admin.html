@@ -11,6 +11,7 @@
     h1{text-align:center;color:#ff2d8f}
     a,button{display:block;width:100%;text-align:center;text-decoration:none;border:0;border-radius:12px;padding:12px;font:800 14px Assistant,sans-serif;margin:8px 0}
     .pink{background:#ff2d8f;color:#120018}
+    .gold{background:#f3c14b;color:#1a1200}
     .red{background:#7a2e2e;color:#fff}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     img,video{width:100%;height:140px;object-fit:cover;display:block;background:#000}
@@ -31,6 +32,7 @@
 <div class="wrap" id="app">
   <h1>ניהול RE:PLAY</h1>
   <a class="pink" href="album.html">אלבום</a>
+  <a class="gold" href="reviews.html">חוות דעת וסטטיסטיקה</a>
   <button class="red" id="delAll" type="button">מחק הכל</button>
   <div id="grid" class="grid"></div>
   <p id="note" style="text-align:center"></p>
@@ -55,6 +57,7 @@ async function load(){
     const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
     for(const x of (js.data||[])){
       const d=String(x.description||'');
+      if(d.startsWith('REV|')) continue;
       const video=d.startsWith('VID|');
       const url=video?d.split('|').slice(2).join('|'):x.link;
       media.push({id:x.id,url,video});
