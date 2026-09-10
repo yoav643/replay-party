@@ -1,0 +1,17 @@
+{
+  "name": "RE:PLAY",
+  "short_name": "RE:PLAY",
+  "description": "האפליקציה של מסיבת RE:PLAY",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#120018",
+  "theme_color": "#120018",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "https://i.imgur.com/kApDN84.jpeg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" }
+  ]
+}

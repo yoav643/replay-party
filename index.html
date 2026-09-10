@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#120018" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RE:PLAY" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="https://i.imgur.com/kApDN84.jpeg" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <title>RE:PLAY · היום זה קורה</title>
   <meta property="og:title" content="RE:PLAY · היום זה קורה" />
   <meta property="og:description" content="10.9 · 21:00-02:00 · ניקה · Music by Guy Pilo" />
@@ -28,17 +34,18 @@
     .bar{position:relative;z-index:3;flex:0 0 auto;padding:8px 12px 12px;background:linear-gradient(180deg,transparent,#14001c 18%)}
     .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
     .cd{display:flex;gap:6px;direction:ltr}
-    .cd div{min-width:48px;background:rgba(255,255,255,.08);border-radius:10px;padding:4px 6px;text-align:center;animation:pulse 1.8s ease-in-out infinite}
-    .cd b{display:block;font-family:Oswald,sans-serif;font-size:18px;line-height:1.1}
-    .cd span{font-size:10px;color:#c9a8ff}
-    .venue{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#e8d7ff}
-    .venue small{display:block;font-weight:700;color:#c9a8ff;font-size:11px}
-    .icon{width:40px;height:40px;border-radius:50%;flex-shrink:0;border:0;padding:0;cursor:pointer}
+    .cd div{min-width:44px;background:rgba(255,255,255,.08);border-radius:10px;padding:4px 5px;text-align:center;animation:pulse 1.8s ease-in-out infinite}
+    .cd b{display:block;font-family:Oswald,sans-serif;font-size:17px;line-height:1.1}
+    .cd span{font-size:9px;color:#c9a8ff}
+    .venue{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#e8d7ff}
+    .venue small{display:block;font-weight:700;color:#c9a8ff;font-size:10px}
+    .icon{width:36px;height:36px;border-radius:50%;flex-shrink:0;border:0;padding:0;cursor:pointer}
     .waze{background:#33CCFF;animation:waze 1.6s ease-in-out infinite;display:block}
-    .waze svg,.music svg{width:40px;height:40px;display:block}
+    .icon svg{width:36px;height:36px;display:block}
     .music{background:#ff2d8f;color:#fff}
     .music.on{background:#3de0ff;animation:waze 1s ease-in-out infinite}
     .music.wait{box-shadow:0 0 0 0 rgba(255,45,143,.7);animation:ring 1.2s ease-out infinite}
+    .install{background:#f3c14b}
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .actions a{position:relative;overflow:hidden;text-decoration:none;text-align:center;border-radius:14px;padding:11px 6px;font-weight:800;font-size:14px}
     .actions a.full{grid-column:1/-1}
@@ -46,6 +53,8 @@
     .pink{background:linear-gradient(90deg,#ff2d8f,#ff6bb5);color:#1a0018}
     .cyan{background:linear-gradient(90deg,#3de0ff,#7af);color:#041018}
     .gold{background:linear-gradient(90deg,#f3c14b,#ffe08a);color:#1a1200;animation:pop 2.8s ease-in-out infinite}
+    .toast{display:none;position:absolute;left:12px;right:12px;bottom:118px;z-index:5;background:#2a0636;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+    .toast.on{display:block}
     @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-16px) scale(1.12)}}
     @keyframes rise{0%{transform:translateY(110%) scale(.6);opacity:0}18%{opacity:1}100%{transform:translateY(-130%) scale(1.1);opacity:0}}
     @keyframes twinkle{0%,100%{transform:scale(.2) rotate(0deg);opacity:.15}45%{transform:scale(1.15) rotate(20deg);opacity:1}70%{transform:scale(.55) rotate(-8deg);opacity:.5}}
@@ -71,6 +80,7 @@
   <div class="flyer-wrap">
     <img class="flyer" src="https://i.imgur.com/kApDN84.jpeg" alt="RE:PLAY פלאייר" />
   </div>
+  <div class="toast" id="toast"></div>
   <div class="bar">
     <div class="row">
       <div class="cd" id="cd">
@@ -80,6 +90,9 @@
       </div>
       <div class="venue">
         <div>ניקה<small>הדסה 20</small></div>
+        <button class="icon install" id="installBtn" type="button" aria-label="התקן אפליקציה" title="התקן אפליקציה">
+          <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#f3c14b"/><path fill="#1a1200" d="M24 13v14m0 0l-6-6m6 6l6-6M15 33h18" stroke="#1a1200" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <button class="icon music wait" id="musicBtn" type="button" aria-label="מוזיקה" title="מוזיקה שנות ה-80">
           <svg viewBox="0 0 48 48" id="musicIcon"><circle cx="24" cy="24" r="24" fill="currentColor"/><path id="musicGlyph" fill="#1a0018" d="M30 14v16.2a4.2 4.2 0 1 1-2.4-3.8V18.2l-10 2.2v12.3a4.2 4.2 0 1 1-2.4-3.8V17.6z"/></svg>
         </button>
@@ -172,5 +185,34 @@ function pause(){
 }
 btn.onclick=()=>{ if(audio.paused) play(); else pause(); };
 if(localStorage.getItem('replay-music')!=='0') play();
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+const toast=document.getElementById('toast');
+function showToast(msg){
+  toast.textContent=msg;
+  toast.classList.add('on');
+  setTimeout(()=>toast.classList.remove('on'),5000);
+}
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferred=e;
+});
+document.getElementById('installBtn').onclick=async()=>{
+  if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
+    showToast('האפליקציה כבר מותקנת');
+    return;
+  }
+  if(deferred){
+    deferred.prompt();
+    const res=await deferred.userChoice;
+    deferred=null;
+    if(res.outcome==='accepted') showToast('האפליקציה הותקנה');
+    return;
+  }
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(ios) showToast('באייפון: שיתוף → הוסף למסך הבית');
+  else showToast('בדפדפן: תפריט → התקן אפליקציה / הוסף למסך הבית');
+};
 </script>
 </body></html>
