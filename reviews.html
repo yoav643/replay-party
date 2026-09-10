@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
   <title>סטטיסטיקת חוות דעת · RE:PLAY</title>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
   <style>
@@ -42,15 +43,23 @@ const LABELS=['מוזיקה / DJ','אווירה ווייב','בר ושתייה',
 const CACHE='replay-reviews-cache';
 const gate=document.getElementById('gate'), app=document.getElementById('app');
 function openApp(){ gate.classList.remove('on'); app.classList.add('on'); load(); }
-if(sessionStorage.getItem('replay-admin')==='1') openApp(); else gate.classList.add('on');
+if(localStorage.getItem('replay-admin')==='1') openApp(); else gate.classList.add('on');
 document.getElementById('go').onclick=()=>{
-  if(document.getElementById('pw').value===PASS){ sessionStorage.setItem('replay-admin','1'); openApp(); }
+  if(document.getElementById('pw').value===PASS){ localStorage.setItem('replay-admin','1'); sessionStorage.setItem('replay-admin','1'); openApp(); }
   else document.getElementById('err').textContent='סיסמה שגויה';
 };
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
-let items=[];
+let items=[], deleted=new Set(JSON.parse(localStorage.getItem('replay-reviews-deleted')||'[]'));
+function saveDeleted(){ localStorage.setItem('replay-reviews-deleted', JSON.stringify([...deleted])); }
 function readCache(){ try{ return JSON.parse(localStorage.getItem(CACHE)||'[]'); }catch(e){ return []; } }
 function writeCache(list){ localStorage.setItem(CACHE, JSON.stringify(list)); }
+function merge(list){
+  const map=new Map();
+  list.forEach(it=>{ if(it&&it.id&&!deleted.has(it.id)) map.set(it.id,it); });
+  items=[...map.values()];
+  writeCache(items);
+  draw();
+}
 function dec(s){ try{ return decodeURIComponent(String(s||'')); }catch(e){ return String(s||''); } }
 function parseRev(d){
   const raw=String(d||'');
@@ -80,44 +89,36 @@ function draw(){
   document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
 }
 async function load(){
-  const cached=readCache();
-  items=cached.slice();
-  draw();
-  const seen=new Set();
-  const fresh=[];
-  for(const key of [ALBUM, HASH]){
-    try{
-      const js=await (await fetch('https://api.imgur.com/3/album/'+key+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
-      for(const x of (js.data||[])){
-        if(seen.has(x.id)) continue;
-        const parsed=parseRev(x.description||x.title||'');
-        if(parsed){ seen.add(x.id); fresh.push({id:x.id,...parsed}); }
-      }
-    }catch(e){}
-  }
-  if(fresh.length){
-    const map=new Map();
-    cached.concat(fresh).forEach(it=>{ if(it&&it.id) map.set(it.id,it); });
-    items=[...map.values()];
-    writeCache(items);
-    draw();
-  }
+  merge(readCache());
+  try{
+    const file=await (await fetch('reviews.json?t='+Date.now(),{cache:'no-store'})).json();
+    if(Array.isArray(file)&&file.length) merge(readCache().concat(file));
+  }catch(e){}
+  try{
+    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+    const fresh=[];
+    for(const x of (js.data||[])){
+      const parsed=parseRev(x.description||x.title||'');
+      if(parsed) fresh.push({id:x.id,...parsed});
+    }
+    if(fresh.length) merge(readCache().concat(fresh));
+  }catch(e){}
 }
 async function delSilent(id){
   await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})});
 }
 async function delOne(id){
   if(!confirm('למחוק חוות דעת זו?')) return;
-  items=items.filter(x=>x.id!==id);
-  writeCache(items);
-  draw();
+  deleted.add(id); saveDeleted();
+  merge(items.filter(x=>x.id!==id));
   try{ await delSilent(id); }catch(e){}
 }
 document.getElementById('delAll').onclick=async()=>{
   if(!items.length) return;
   if(!confirm('למחוק את כל חוות הדעת?')) return;
   const copy=items.slice();
-  items=[]; writeCache([]); draw();
+  copy.forEach(it=>deleted.add(it.id)); saveDeleted();
+  merge([]);
   for(const it of copy){ try{ await delSilent(it.id); }catch(e){} }
 };
 </script>
