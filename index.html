@@ -33,8 +33,12 @@
     .cd span{font-size:10px;color:#c9a8ff}
     .venue{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#e8d7ff}
     .venue small{display:block;font-weight:700;color:#c9a8ff;font-size:11px}
-    .waze{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:#33CCFF;animation:waze 1.6s ease-in-out infinite}
-    .waze svg{width:40px;height:40px;display:block}
+    .icon{width:40px;height:40px;border-radius:50%;flex-shrink:0;border:0;padding:0;cursor:pointer}
+    .waze{background:#33CCFF;animation:waze 1.6s ease-in-out infinite;display:block}
+    .waze svg,.music svg{width:40px;height:40px;display:block}
+    .music{background:#ff2d8f;color:#fff}
+    .music.on{background:#3de0ff;animation:waze 1s ease-in-out infinite}
+    .music.wait{box-shadow:0 0 0 0 rgba(255,45,143,.7);animation:ring 1.2s ease-out infinite}
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .actions a{position:relative;overflow:hidden;text-decoration:none;text-align:center;border-radius:14px;padding:11px 6px;font-weight:800;font-size:14px}
     .actions a.full{grid-column:1/-1}
@@ -52,7 +56,8 @@
     @keyframes waze{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
     @keyframes shine{0%,55%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
     @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-    @media (prefers-reduced-motion:reduce){.blob,.spark,.glitter,.dust,.scan,.flyer,.cd div,.waze,.actions a::after,.gold{animation:none}}
+    @keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,45,143,.55)}100%{box-shadow:0 0 0 14px rgba(255,45,143,0)}}
+    @media (prefers-reduced-motion:reduce){.blob,.spark,.glitter,.dust,.scan,.flyer,.cd div,.waze,.music,.actions a::after,.gold{animation:none}}
   </style>
 </head>
 <body>
@@ -75,7 +80,10 @@
       </div>
       <div class="venue">
         <div>ניקה<small>הדסה 20</small></div>
-        <a class="waze" href="https://www.waze.com/ul?q=%D7%A0%D7%99%D7%A7%D7%94%20%D7%94%D7%93%D7%A1%D7%94%2020%20%D7%91%D7%90%D7%A8%20%D7%A9%D7%91%D7%A2&navigate=yes" target="_blank" rel="noopener" aria-label="Waze">
+        <button class="icon music wait" id="musicBtn" type="button" aria-label="מוזיקה" title="מוזיקה שנות ה-80">
+          <svg viewBox="0 0 48 48" id="musicIcon"><circle cx="24" cy="24" r="24" fill="currentColor"/><path id="musicGlyph" fill="#1a0018" d="M30 14v16.2a4.2 4.2 0 1 1-2.4-3.8V18.2l-10 2.2v12.3a4.2 4.2 0 1 1-2.4-3.8V17.6z"/></svg>
+        </button>
+        <a class="icon waze" href="https://www.waze.com/ul?q=%D7%A0%D7%99%D7%A7%D7%94%20%D7%94%D7%93%D7%A1%D7%94%2020%20%D7%91%D7%90%D7%A8%20%D7%A9%D7%91%D7%A2&navigate=yes" target="_blank" rel="noopener" aria-label="Waze">
           <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#33CCFF"/><path fill="#0B1D2A" d="M24 10c-6.6 0-12 5.1-12 12.2 0 8.3 10.2 15.3 11.6 16.2.4.3.9.3 1.3 0C26.3 37.5 36 30.5 36 22.2 36 15.1 30.6 10 24 10zm0 16.4a4.4 4.4 0 1 1 0-8.8 4.4 4.4 0 0 1 0 8.8z"/></svg>
         </a>
       </div>
@@ -87,6 +95,10 @@
     </div>
   </div>
 </div>
+<audio id="bgm" loop preload="auto">
+  <source src="https://www.orangefreesounds.com/wp-content/uploads/2019/05/Friday-night-synthwave-electronic-music.mp3" type="audio/mpeg" />
+  <source src="https://orangefreesounds.com/wp-content/uploads/2025/08/80s-synth-pop-disco-music-loop.mp3" type="audio/mpeg" />
+</audio>
 <script>
 const fx=document.getElementById('fx');
 const colors=['#fff','#ffe08a','#ff6bb5','#3de0ff','#ffffff'];
@@ -137,5 +149,28 @@ function tick(){
   document.getElementById('cd').innerHTML='<div><b>'+p(h)+'</b><span>שעות</span></div><div><b>'+p(m)+'</b><span>דקות</span></div><div><b>'+p(s)+'</b><span>שניות</span></div>';
 }
 tick(); setInterval(tick,1000);
+
+const audio=document.getElementById('bgm');
+const btn=document.getElementById('musicBtn');
+const glyph=document.getElementById('musicGlyph');
+audio.volume=0.42;
+const NOTE='M30 14v16.2a4.2 4.2 0 1 1-2.4-3.8V18.2l-10 2.2v12.3a4.2 4.2 0 1 1-2.4-3.8V17.6z';
+const MUTE='M16.5 20.2v7.6h5.1L28 34V14l-6.4 6.2zM31.2 24l3.2-3.2 1.6 1.6L32.8 24l3.2 3.2-1.6 1.6-3.2-3.2-3.2 3.2-1.6-1.6 3.2-3.2-3.2-3.2 1.6-1.6z';
+function setUi(on){
+  btn.classList.toggle('on', on);
+  btn.classList.toggle('wait', !on);
+  glyph.setAttribute('d', on?NOTE:MUTE);
+}
+async function play(){
+  try{ await audio.play(); localStorage.setItem('replay-music','1'); setUi(true); }
+  catch(e){ setUi(false); }
+}
+function pause(){
+  audio.pause();
+  localStorage.setItem('replay-music','0');
+  setUi(false);
+}
+btn.onclick=()=>{ if(audio.paused) play(); else pause(); };
+if(localStorage.getItem('replay-music')!=='0') play();
 </script>
 </body></html>
