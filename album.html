@@ -18,10 +18,11 @@
     .cyan{background:#3de0ff;color:#041018}
     .red{background:#7a2e2e;color:#fff}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 18px}
-    .item{background:#2a0636;border-radius:16px;overflow:hidden}
+    .item{position:relative;background:#2a0636;border-radius:16px;overflow:hidden}
     .item img,.item video{width:100%;height:168px;object-fit:cover;display:block;background:#111}
     .open{display:block;text-align:center;font-size:13px;font-weight:800;padding:10px;background:#3de0ff;color:#041018;text-decoration:none}
-    .del{width:100%;border:0;background:#4a1220;color:#ffb4c4;font-weight:800;padding:10px}
+    .del{position:absolute;top:8px;right:8px;z-index:2;width:34px;height:34px;border:0;border-radius:50%;background:rgba(20,0,10,.72);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .del svg{width:18px;height:18px;display:block}
     #note{text-align:center;color:#c9a8ff;padding:0 16px 18px}
     #adminBar{display:none;margin:0 16px 8px}
     #adminBar.on{display:flex}
@@ -51,6 +52,7 @@
 const ALBUM_ID='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
 const isAdmin=new URLSearchParams(location.search).get('admin')==='1' && sessionStorage.getItem('replay-admin')==='1';
 let owner=localStorage.getItem('replay-owner')||'', onlyMine=false, ALL=[];
+const TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="#ffb4c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 function mineIds(){ try{return JSON.parse(localStorage.getItem('replay-mine-ids')||'[]');}catch(e){return[];} }
 function parseDesc(d){ d=String(d||''); if(d.startsWith('VID|')){ const p=d.split('|'); return {video:true,owner:p[1]||'',url:p.slice(2).join('|')}; } return {video:false,owner:d,url:''}; }
 function isMine(it){ return (it.owner&&owner&&it.owner===owner)||mineIds().includes(it.id); }
@@ -64,10 +66,10 @@ function draw(){
       ? ('<video src="'+it.url+'" poster="'+(it.poster||'')+'" controls playsinline></video><a class="open" href="'+it.url+'" target="_blank">נגן סרטון</a>')
       : ('<a href="'+it.url+'" target="_blank"><img src="'+it.url+'" alt=""></a>');
     const canDel=isAdmin||isMine(it);
-    const del=canDel?'<button class="del" data-id="'+it.id+'">'+(isAdmin?'מחק':'מחיקת שלי')+'</button>':'';
+    const del=canDel?'<button class="del" data-id="'+it.id+'" aria-label="מחיקה">'+TRASH+'</button>':'';
     return '<div class="item">'+media+del+'</div>';
   }).join('');
-  grid.querySelectorAll('.del').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
+  grid.querySelectorAll('.del').forEach(b=>b.onclick=e=>{ e.preventDefault(); e.stopPropagation(); delOne(b.dataset.id); });
   note.textContent=list.length+' פריטים';
 }
 async function load(){
