@@ -3,19 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ניהול אלבום · RE:PLAY</title>
+  <title>ניהול · RE:PLAY</title>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     body{min-height:100vh;background:#120018;font-family:Assistant,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
     .wrap{width:100%;max-width:440px;background:#1a0024;border-radius:24px;padding:16px}
     h1{text-align:center;color:#ff2d8f}
-    a,button{display:block;width:100%;text-align:center;text-decoration:none;border:0;border-radius:12px;padding:12px;font:800 14px Assistant,sans-serif;margin:8px 0}
+    a,button{display:block;width:100%;text-align:center;text-decoration:none;border:0;border-radius:12px;padding:14px;font:800 15px Assistant,sans-serif;margin:10px 0}
     .pink{background:#ff2d8f;color:#120018}
     .gold{background:#f3c14b;color:#1a1200}
-    .red{background:#7a2e2e;color:#fff}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    img,video{width:100%;height:140px;object-fit:cover;display:block;background:#000}
-    .item{background:#2a0636;border-radius:12px;overflow:hidden}
     input{width:100%;padding:12px;border-radius:12px;border:0;font:16px Assistant,sans-serif;margin:10px 0}
     #gate,#app{display:none}
     #gate.on,#app.on{display:block}
@@ -31,17 +27,14 @@
 </div>
 <div class="wrap" id="app">
   <h1>ניהול RE:PLAY</h1>
-  <a class="pink" href="album.html">אלבום</a>
-  <a class="gold" href="reviews.html">חוות דעת וסטטיסטיקה</a>
-  <button class="red" id="delAll" type="button">מחק הכל</button>
-  <div id="grid" class="grid"></div>
-  <p id="note" style="text-align:center"></p>
-  <a href="./" style="color:#c9a8ff">חזרה</a>
+  <a class="pink" href="album.html?admin=1">אלבום — צפייה ומחיקה</a>
+  <a class="gold" href="reviews.html">חוות דעת — סטטיסטיקה ומחיקה</a>
+  <a href="./" style="color:#c9a8ff">חזרה לאתר</a>
 </div>
 <script>
 const PASS='Drtech80';
 const gate=document.getElementById('gate'), app=document.getElementById('app');
-function openApp(){ gate.classList.remove('on'); app.classList.add('on'); load(); }
+function openApp(){ gate.classList.remove('on'); app.classList.add('on'); }
 if(sessionStorage.getItem('replay-admin')==='1') openApp();
 else gate.classList.add('on');
 document.getElementById('go').onclick=()=>{
@@ -49,30 +42,5 @@ document.getElementById('go').onclick=()=>{
   else document.getElementById('err').textContent='סיסמה שגויה';
 };
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
-const ALBUM='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
-let media=[];
-async function load(){
-  media=[];
-  try{
-    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
-    for(const x of (js.data||[])){
-      const d=String(x.description||'');
-      if(d.startsWith('REV|')) continue;
-      const video=d.startsWith('VID|');
-      const url=video?d.split('|').slice(2).join('|'):x.link;
-      media.push({id:x.id,url,video});
-    }
-  }catch(e){}
-  document.getElementById('grid').innerHTML=media.map(it=>'<div class="item">'+(it.video?'<video src="'+it.url+'" controls></video>':'<img src="'+it.url+'">')+'<button class="red" data-id="'+it.id+'">מחק</button></div>').join('')||'<p style="grid-column:1/-1;text-align:center">ריק</p>';
-  document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>del(b.dataset.id));
-  document.getElementById('note').textContent=media.length+' פריטים';
-}
-async function del(id){
-  if(!confirm('למחוק?')) return;
-  await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})});
-  setTimeout(load,600);
-}
-document.getElementById('delAll').onclick=async()=>{ if(!confirm('למחוק הכל?')) return; for(const it of media){ try{ await delSilent(it.id);}catch(e){} } setTimeout(load,800); };
-async function delSilent(id){ await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})}); }
 </script>
 </body></html>
