@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Cache-Control" content="no-store" />
   <title>סטטיסטיקת חוות דעת · RE:PLAY</title>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
   <style>
@@ -38,42 +37,42 @@
   <p style="text-align:center;margin-top:12px"><a href="admin.html">חזרה לניהול</a></p>
 </div>
 <script>
-const PASS='Drtech80', ALBUM='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
+const PASS='Drtech80';
+const ALBUM='vRlN4sX';
+const HASH='2krb6G4ep4bmbEP';
+const AUTH='Client-ID 546c25a59c58ad7';
 const LABELS=['מוזיקה / DJ','אווירה ווייב','בר ושתייה','המקום','הקהל'];
 const CACHE='replay-reviews-cache';
-const gate=document.getElementById('gate'), app=document.getElementById('app');
-function openApp(){ gate.classList.remove('on'); app.classList.add('on'); load(); }
-if(localStorage.getItem('replay-admin')==='1') openApp(); else gate.classList.add('on');
-document.getElementById('go').onclick=()=>{
-  if(document.getElementById('pw').value===PASS){ localStorage.setItem('replay-admin','1'); sessionStorage.setItem('replay-admin','1'); openApp(); }
-  else document.getElementById('err').textContent='סיסמה שגויה';
-};
-document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
-let items=[], deleted=new Set(JSON.parse(localStorage.getItem('replay-reviews-deleted')||'[]'));
+const gate=document.getElementById('gate');
+const app=document.getElementById('app');
+
+let items=[];
+let deleted=new Set();
+try { deleted=new Set(JSON.parse(localStorage.getItem('replay-reviews-deleted')||'[]')); } catch(e) {}
+
 function saveDeleted(){ localStorage.setItem('replay-reviews-deleted', JSON.stringify([...deleted])); }
-function readCache(){ try{ return JSON.parse(localStorage.getItem(CACHE)||'[]'); }catch(e){ return []; } }
+function readCache(){ try { return JSON.parse(localStorage.getItem(CACHE)||'[]'); } catch(e){ return []; } }
 function writeCache(list){ localStorage.setItem(CACHE, JSON.stringify(list)); }
-function merge(list){
-  const map=new Map();
-  list.forEach(it=>{ if(it&&it.id&&!deleted.has(it.id)) map.set(it.id,it); });
-  items=[...map.values()];
-  writeCache(items);
-  draw();
-}
-function dec(s){ try{ return decodeURIComponent(String(s||'')); }catch(e){ return String(s||''); } }
+function dec(s){ try { return decodeURIComponent(String(s||'')); } catch(e){ return String(s||''); } }
 function parseRev(d){
   const raw=String(d||'');
   const i=raw.indexOf('REV');
   if(i<0) return null;
   const p=raw.slice(i).split('|');
   if(p[0]==='REV2'){
-    const nums=(p[3]||'').split(',').map(n=>Number(n)||0);
-    return {name:dec(p[2])||'אורח', nums, text:dec(p.slice(5).join('|'))};
+    return {name:dec(p[2])||'אורח', nums:(p[3]||'').split(',').map(n=>Number(n)||0), text:dec(p.slice(5).join('|'))};
   }
   if(p[0]==='REV'){
     return {name:dec(p[2])||'אורח', nums:[3,4,5,6,7].map(i=>Number(p[i])||0), text:dec(p.slice(9).join('|'))};
   }
   return null;
+}
+function merge(list){
+  const map=new Map();
+  list.forEach(it=>{ if(it&&it.id&&!deleted.has(it.id)) map.set(it.id,it); });
+  items=[...map.values()];
+  writeCache(items);
+  draw();
 }
 function draw(){
   document.getElementById('sum').textContent=items.length+' חוות דעת';
@@ -90,10 +89,6 @@ function draw(){
 }
 async function load(){
   merge(readCache());
-  try{
-    const file=await (await fetch('reviews.json?t='+Date.now(),{cache:'no-store'})).json();
-    if(Array.isArray(file)&&file.length) merge(readCache().concat(file));
-  }catch(e){}
   try{
     const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
     const fresh=[];
@@ -113,13 +108,30 @@ async function delOne(id){
   merge(items.filter(x=>x.id!==id));
   try{ await delSilent(id); }catch(e){}
 }
+function openApp(){
+  gate.classList.remove('on');
+  app.classList.add('on');
+  load();
+}
+document.getElementById('go').onclick=()=>{
+  if(document.getElementById('pw').value===PASS){
+    localStorage.setItem('replay-admin','1');
+    sessionStorage.setItem('replay-admin','1');
+    openApp();
+  } else document.getElementById('err').textContent='סיסמה שגויה';
+};
+document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
 document.getElementById('delAll').onclick=async()=>{
   if(!items.length) return;
   if(!confirm('למחוק את כל חוות הדעת?')) return;
   const copy=items.slice();
-  copy.forEach(it=>deleted.add(it.id)); saveDeleted();
+  copy.forEach(it=>deleted.add(it.id));
+  saveDeleted();
   merge([]);
   for(const it of copy){ try{ await delSilent(it.id); }catch(e){} }
 };
+
+if(localStorage.getItem('replay-admin')==='1' || sessionStorage.getItem('replay-admin')==='1') openApp();
+else gate.classList.add('on');
 </script>
 </body></html>
