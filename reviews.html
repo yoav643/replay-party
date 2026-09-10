@@ -48,15 +48,20 @@ document.getElementById('go').onclick=()=>{
 };
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
 let items=[];
+function dec(s){ try{ return decodeURIComponent(String(s||'')); }catch(e){ return String(s||''); } }
 function parseRev(d){
-  const p=String(d||'').split('|');
-  if(p[0]!=='REV') return null;
-  let name='';
-  try{ name=decodeURIComponent(p[2]||'אורח'); }catch(e){ name=p[2]||'אורח'; }
-  const nums=[3,4,5,6,7].map(i=>Number(p[i])||0);
-  let text='';
-  try{ text=decodeURIComponent(p.slice(9).join('|')||''); }catch(e){ text=p.slice(9).join('|'); }
-  return {name,nums,text};
+  const raw=String(d||'');
+  const i=raw.indexOf('REV');
+  if(i<0) return null;
+  const p=raw.slice(i).split('|');
+  if(p[0]==='REV2'){
+    const nums=(p[3]||'').split(',').map(n=>Number(n)||0);
+    return {name:dec(p[2])||'אורח', nums, text:dec(p.slice(5).join('|'))};
+  }
+  if(p[0]==='REV'){
+    return {name:dec(p[2])||'אורח', nums:[3,4,5,6,7].map(i=>Number(p[i])||0), text:dec(p.slice(9).join('|'))};
+  }
+  return null;
 }
 function draw(){
   document.getElementById('sum').textContent=items.length+' חוות דעת';
@@ -68,18 +73,22 @@ function draw(){
   document.getElementById('list').innerHTML=items.map(it=>{
     const stars=LABELS.map((l,i)=>'<div>'+l+': '+'★'.repeat(it.nums[i]||0)+' '+(it.nums[i]||'-')+'</div>').join('');
     return '<div class="card"><b>'+it.name+'</b><div class="stars">'+stars+'</div>'+(it.text?'<p>'+it.text+'</p>':'')+'<button class="red" data-id="'+it.id+'">מחק חוות דעת</button></div>';
-  }).join('')||'<p style="text-align:center">עדיין אין</p>';
+  }).join('')||'<p style="text-align:center">עדיין אין חוות דעת</p>';
   document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
 }
 async function load(){
   items=[];
-  try{
-    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
-    for(const x of (js.data||[])){
-      const parsed=parseRev(x.description||'');
-      if(parsed) items.push({id:x.id,...parsed});
-    }
-  }catch(e){}
+  const seen=new Set();
+  for(const key of [ALBUM, HASH]){
+    try{
+      const js=await (await fetch('https://api.imgur.com/3/album/'+key+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+      for(const x of (js.data||[])){
+        if(seen.has(x.id)) continue;
+        const parsed=parseRev(x.description||x.title||'');
+        if(parsed){ seen.add(x.id); items.push({id:x.id,...parsed}); }
+      }
+    }catch(e){}
+  }
   draw();
 }
 async function delSilent(id){

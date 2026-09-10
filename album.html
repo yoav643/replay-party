@@ -43,14 +43,13 @@
   </div>
   <div class="row" id="adminBar">
     <button class="btn red" id="delAll" type="button">מחק הכל באלבום</button>
-    <a class="btn cyan" href="admin.html">לניהול</a>
   </div>
   <div id="grid" class="grid"></div>
   <p id="note"></p>
 </div>
 <script>
 const ALBUM_ID='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
-const isAdmin=sessionStorage.getItem('replay-admin')==='1';
+const isAdmin=new URLSearchParams(location.search).get('admin')==='1' && sessionStorage.getItem('replay-admin')==='1';
 let owner=localStorage.getItem('replay-owner')||'', onlyMine=false, ALL=[];
 function mineIds(){ try{return JSON.parse(localStorage.getItem('replay-mine-ids')||'[]');}catch(e){return[];} }
 function parseDesc(d){ d=String(d||''); if(d.startsWith('VID|')){ const p=d.split('|'); return {video:true,owner:p[1]||'',url:p.slice(2).join('|')}; } return {video:false,owner:d,url:''}; }
@@ -69,21 +68,23 @@ function draw(){
     return '<div class="item">'+media+del+'</div>';
   }).join('');
   grid.querySelectorAll('.del').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
-  note.textContent=list.length+' פריטים'+(isAdmin?' · מצב ניהול':'');
+  note.textContent=list.length+' פריטים';
 }
 async function load(){
   const map=new Map();
-  try{
-    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM_ID+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
-    for(const x of (js.data||[])){
-      const rawDesc=String(x.description||x.title||'');
-      if(rawDesc.startsWith('REV|')) continue;
-      const meta=parseDesc(rawDesc);
-      const video=!!meta.video;
-      const url=video?(meta.url||x.link):x.link;
-      map.set(x.id,{id:x.id,url,poster:x.link,video,owner:meta.owner});
-    }
-  }catch(e){}
+  for(const key of [ALBUM_ID, HASH]){
+    try{
+      const js=await (await fetch('https://api.imgur.com/3/album/'+key+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+      for(const x of (js.data||[])){
+        const rawDesc=String(x.description||x.title||'');
+        if(rawDesc.startsWith('REV|')||rawDesc.startsWith('REV2|')) continue;
+        const meta=parseDesc(rawDesc);
+        const video=!!meta.video;
+        const url=video?(meta.url||x.link):x.link;
+        map.set(x.id,{id:x.id,url,poster:x.link,video,owner:meta.owner});
+      }
+    }catch(e){}
+  }
   ALL=[...map.values()];
   draw();
 }

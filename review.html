@@ -60,6 +60,7 @@ box.querySelectorAll('.stars').forEach(row=>{
   });
 });
 function tiny(){ const c=document.createElement('canvas'); c.width=8;c.height=8; c.getContext('2d').fillRect(0,0,8,8); return new Promise(r=>c.toBlob(r,'image/jpeg',.4)); }
+function enc(s){ return encodeURIComponent(String(s||'')).replace(/\|/g,'%7C'); }
 document.getElementById('send').onclick=async()=>{
   const name=document.getElementById('name').value.trim()||'אורח';
   const text=document.getElementById('text').value.trim();
@@ -68,11 +69,12 @@ document.getElementById('send').onclick=async()=>{
   note.textContent='שולח...';
   document.getElementById('send').disabled=true;
   try{
-    const payload=[rates.music,rates.vibe,rates.bar,rates.place,rates.crowd,Date.now()].join('|');
-    const desc='REV|'+owner+'|'+encodeURIComponent(name)+'|'+payload+'|'+encodeURIComponent(text);
+    const scores=[rates.music,rates.vibe,rates.bar,rates.place,rates.crowd].join(',');
+    const desc='REV2|'+enc(owner)+'|'+enc(name)+'|'+scores+'|'+Date.now()+'|'+enc(text);
     const fd=new FormData();
     fd.append('image', new File([await tiny()],'rev.jpg',{type:'image/jpeg'}));
     fd.append('album', HASH);
+    fd.append('title', 'REV2');
     fd.append('description', desc);
     const js=await (await fetch('https://api.imgur.com/3/upload',{method:'POST', headers:{Authorization:AUTH}, body:fd})).json();
     if(!js||!js.success) throw new Error('up');
