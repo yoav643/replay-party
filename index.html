@@ -9,7 +9,7 @@
   <meta property="og:description" content="10.9 · 21:00-02:00 · ניקה · Music by Guy Pilo" />
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet" />
   <style>
-    :root{--pink:#ff2d8f;--cyan:#3de0ff;--cream:#f7e9ff}
+    :root{--pink:#ff2d8f;--cyan:#3de0ff}
     *{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100vh;background:radial-gradient(ellipse at top,#4a0a5c 0%,#120018 55%,#07000b 100%);font-family:Assistant,Arial,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
     .phone{width:100%;max-width:440px;background:linear-gradient(180deg,#2a0636,#14001c);border-radius:28px;overflow:hidden;box-shadow:0 0 0 6px #1a0024,0 24px 60px rgba(0,0,0,.5)}
@@ -25,7 +25,9 @@
     .cd div{min-width:62px;background:rgba(255,255,255,.08);border-radius:12px;padding:8px}
     .cd b{display:block;font-family:Oswald,sans-serif;font-size:24px}
     .cd span{font-size:11px;color:#c9a8ff}
-    .venue{margin-top:8px;color:#e8d7ff}
+    .venue{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:12px;color:#e8d7ff}
+    .waze{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#33CCFF;display:block}
+    .waze svg{width:48px;height:48px;display:block}
     .actions{display:grid;gap:10px;padding:16px 18px 24px}
     .actions a{text-decoration:none;text-align:center;border-radius:16px;padding:16px 10px;font-weight:800;font-size:17px}
     .pink{background:linear-gradient(90deg,#ff2d8f,#ff6bb5);color:#1a0018}
@@ -46,7 +48,12 @@
       <div><b>--</b><span>דקות</span></div>
       <div><b>--</b><span>שניות</span></div>
     </div>
-    <div class="venue">Music by <b>Guy Pilo</b><br>80s · 90s · Hip Hop · R&amp;B · Hits</div>
+    <div class="venue">
+      <div>ניקה<br><span style="font-size:13px;color:#c9a8ff">הדסה 20, באר שבע</span><br>Music by <b>Guy Pilo</b></div>
+      <a class="waze" href="https://www.waze.com/ul?q=%D7%A0%D7%99%D7%A7%D7%94%20%D7%94%D7%93%D7%A1%D7%94%2020%20%D7%91%D7%90%D7%A8%20%D7%A9%D7%91%D7%A2&navigate=yes" target="_blank" rel="noopener" aria-label="ניווט ב-Waze">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="24" fill="#33CCFF"/><path fill="#0B1D2A" d="M24 10c-6.6 0-12 5.1-12 12.2 0 8.3 10.2 15.3 11.6 16.2.4.3.9.3 1.3 0C26.3 37.5 36 30.5 36 22.2 36 15.1 30.6 10 24 10zm0 16.4a4.4 4.4 0 1 1 0-8.8 4.4 4.4 0 0 1 0 8.8z"/></svg>
+      </a>
+    </div>
   </div>
   <div class="actions">
     <a class="pink" href="photos.html">צלמו והעלו לאלבום</a>
