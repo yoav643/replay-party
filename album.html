@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>אלבום · RE:PLAY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:#120018;font-family:Assistant,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
+    .phone{width:100%;max-width:440px;background:#1a0024;border-radius:28px;overflow:hidden}
+    .top{text-align:center;padding:22px 16px 8px}
+    h1{font-family:Oswald,sans-serif;color:#ff2d8f}
+    .row{display:flex;gap:8px;margin:10px 16px;flex-wrap:wrap}
+    a.btn,button.btn{flex:1;min-width:46%;border:0;border-radius:14px;padding:13px 8px;font:800 14px Assistant,sans-serif;text-align:center;text-decoration:none}
+    .pink{background:#ff2d8f;color:#120018}
+    .cyan{background:#3de0ff;color:#041018}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 18px}
+    .item{background:#2a0636;border-radius:16px;overflow:hidden}
+    .item img,.item video{width:100%;height:168px;object-fit:cover;display:block;background:#111}
+    .open{display:block;text-align:center;font-size:13px;font-weight:800;padding:10px;background:#3de0ff;color:#041018;text-decoration:none}
+    .del{width:100%;border:0;background:#4a1220;color:#ffb4c4;font-weight:800;padding:10px}
+    #note{text-align:center;color:#c9a8ff;padding:0 16px 18px}
+  </style>
+</head>
+<body>
+<div class="phone">
+  <div class="top">
+    <h1>RE:PLAY ALBUM</h1>
+    <p>תמונות וסרטונים מהמסיבה</p>
+  </div>
+  <div class="row">
+    <a class="btn pink" href="photos.html">להעלות</a>
+    <a class="btn cyan" href="./">חזרה</a>
+  </div>
+  <div class="row">
+    <button class="btn cyan" id="mineBtn" type="button">רק מה שצילמתי</button>
+    <button class="btn pink" id="dl" type="button">הורדת הכל</button>
+  </div>
+  <div id="grid" class="grid"></div>
+  <p id="note"></p>
+</div>
+<script>
+const ALBUM_ID='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
+let owner=localStorage.getItem('replay-owner')||'', onlyMine=false, ALL=[];
+function mineIds(){ try{return JSON.parse(localStorage.getItem('replay-mine-ids')||'[]');}catch(e){return[];} }
+function parseDesc(d){ d=String(d||''); if(d.startsWith('VID|')){ const p=d.split('|'); return {video:true,owner:p[1]||'',url:p.slice(2).join('|')}; } return {video:false,owner:d,url:''}; }
+function isMine(it){ return (it.owner&&owner&&it.owner===owner)||mineIds().includes(it.id); }
+const grid=document.getElementById('grid'), note=document.getElementById('note'), mineBtn=document.getElementById('mineBtn');
+function draw(){
+  const list=onlyMine?ALL.filter(isMine):ALL;
+  if(!list.length){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px 8px">עדיין אין תמונות — תהיו הראשונים</div>'; note.textContent=''; return; }
+  grid.innerHTML=list.map(it=>{
+    const media=it.video
+      ? ('<video src="'+it.url+'" poster="'+(it.poster||'')+'" controls playsinline></video><a class="open" href="'+it.url+'" target="_blank">נגן סרטון</a>')
+      : ('<a href="'+it.url+'" target="_blank"><img src="'+it.url+'" alt=""></a>');
+    const del=isMine(it)?'<button class="del" data-id="'+it.id+'">מחיקת שלי</button>':'';
+    return '<div class="item">'+media+del+'</div>';
+  }).join('');
+  grid.querySelectorAll('.del').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
+  note.textContent=list.length+' פריטים';
+}
+async function load(){
+  const map=new Map();
+  try{
+    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM_ID+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+    for(const x of (js.data||[])){
+      const rawDesc=String(x.description||x.title||'');
+      const meta=parseDesc(rawDesc);
+      const video=!!meta.video;
+      const url=video?(meta.url||x.link):x.link;
+      map.set(x.id,{id:x.id,url,poster:x.link,video,owner:meta.owner});
+    }
+  }catch(e){}
+  ALL=[...map.values()];
+  draw();
+}
+async function delOne(id){
+  if(!confirm('למחוק?')) return;
+  try{ await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})}); }catch(e){}
+  setTimeout(load,800);
+}
+async function zipOf(list,name){
+  if(!list.length) return;
+  const zip=new JSZip(); let n=0;
+  for(const it of list){ try{ zip.file((it.video?'clip':'pic')+'-'+it.id+(it.video?'.mp4':'.jpg'), await (await fetch(it.url)).blob()); n++; }catch(e){} }
+  if(!n) return;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(await zip.generateAsync({type:'blob'})); a.download=name; a.click();
+}
+mineBtn.onclick=()=>{ onlyMine=!onlyMine; mineBtn.textContent=onlyMine?'הצג הכל':'רק מה שצילמתי'; draw(); };
+document.getElementById('dl').onclick=()=>zipOf(ALL,'replay-album.zip');
+load(); setInterval(load,8000);
+</script>
+</body></html>

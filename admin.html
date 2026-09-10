@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ניהול אלבום · RE:PLAY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    body{min-height:100vh;background:#120018;font-family:Assistant,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
+    .wrap{width:100%;max-width:440px;background:#1a0024;border-radius:24px;padding:16px}
+    h1{text-align:center;color:#ff2d8f}
+    a,button{display:block;width:100%;text-align:center;text-decoration:none;border:0;border-radius:12px;padding:12px;font:800 14px Assistant,sans-serif;margin:8px 0}
+    .pink{background:#ff2d8f;color:#120018}
+    .red{background:#7a2e2e;color:#fff}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    img,video{width:100%;height:140px;object-fit:cover;display:block;background:#000}
+    .item{background:#2a0636;border-radius:12px;overflow:hidden}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ניהול RE:PLAY</h1>
+  <a class="pink" href="album.html">אלבום</a>
+  <button class="red" id="delAll" type="button">מחק הכל</button>
+  <div id="grid" class="grid"></div>
+  <p id="note" style="text-align:center"></p>
+  <a href="./" style="color:#c9a8ff">חזרה</a>
+</div>
+<script>
+const ALBUM='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
+let media=[];
+async function load(){
+  media=[];
+  try{
+    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+    for(const x of (js.data||[])){
+      const d=String(x.description||'');
+      const video=d.startsWith('VID|');
+      const url=video?d.split('|').slice(2).join('|'):x.link;
+      media.push({id:x.id,url,video});
+    }
+  }catch(e){}
+  document.getElementById('grid').innerHTML=media.map(it=>'<div class="item">'+(it.video?'<video src="'+it.url+'" controls></video>':'<img src="'+it.url+'">')+'<button class="red" data-id="'+it.id+'">מחק</button></div>').join('')||'<p style="grid-column:1/-1;text-align:center">ריק</p>';
+  document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>del(b.dataset.id));
+  document.getElementById('note').textContent=media.length+' פריטים';
+}
+async function del(id){
+  if(!confirm('למחוק?')) return;
+  await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})});
+  setTimeout(load,600);
+}
+document.getElementById('delAll').onclick=async()=>{ if(!confirm('למחוק הכל?')) return; for(const it of media){ try{ await delSilent(it.id);}catch(e){} } setTimeout(load,800); };
+async function delSilent(id){ await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})}); }
+load();
+</script>
+</body></html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#120018" />
+  <title>RE:PLAY · היום זה קורה</title>
+  <meta property="og:title" content="RE:PLAY · היום זה קורה" />
+  <meta property="og:description" content="10.9 · 21:00-02:00 · ניקה · Music by Guy Pilo" />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{--pink:#ff2d8f;--cyan:#3de0ff;--cream:#f7e9ff}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:radial-gradient(ellipse at top,#4a0a5c 0%,#120018 55%,#07000b 100%);font-family:Assistant,Arial,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
+    .phone{width:100%;max-width:440px;background:linear-gradient(180deg,#2a0636,#14001c);border-radius:28px;overflow:hidden;box-shadow:0 0 0 6px #1a0024,0 24px 60px rgba(0,0,0,.5)}
+    .top{text-align:center;padding:26px 18px 10px}
+    .kicker{letter-spacing:3px;font-size:12px;color:#c9a8ff;font-weight:800}
+    h1{font-family:Oswald,Impact,sans-serif;font-size:54px;line-height:.9;margin:8px 0 4px;color:#fff;text-shadow:0 0 18px #ff2d8f}
+    h1 span{color:var(--pink)}
+    .tag{font-weight:800;font-size:28px;margin:10px 0 4px}
+    .tag b{color:var(--pink)}
+    .sub{color:#d7c2ef;margin-bottom:12px}
+    .when{display:inline-block;background:rgba(255,45,143,.15);border:1px solid rgba(255,45,143,.5);border-radius:999px;padding:8px 14px;font-weight:800}
+    .cd{display:flex;justify-content:center;gap:8px;margin:14px 0;direction:ltr}
+    .cd div{min-width:62px;background:rgba(255,255,255,.08);border-radius:12px;padding:8px}
+    .cd b{display:block;font-family:Oswald,sans-serif;font-size:24px}
+    .cd span{font-size:11px;color:#c9a8ff}
+    .venue{margin-top:8px;color:#e8d7ff}
+    .actions{display:grid;gap:10px;padding:16px 18px 24px}
+    .actions a{text-decoration:none;text-align:center;border-radius:16px;padding:16px 10px;font-weight:800;font-size:17px}
+    .pink{background:linear-gradient(90deg,#ff2d8f,#ff6bb5);color:#1a0018}
+    .cyan{background:linear-gradient(90deg,#3de0ff,#7af);color:#041018}
+    .foot{text-align:center;padding:0 18px 20px;color:#b89ad0;font-size:13px}
+  </style>
+</head>
+<body>
+<div class="phone">
+  <div class="top">
+    <div class="kicker">BACK TO LIFE · BACK TO REALITY</div>
+    <h1>RE:<span>PLAY</span></h1>
+    <div class="tag">היום <b>זה קורה!</b></div>
+    <p class="sub">חוזרים לרגעים שעושים לנו טוב</p>
+    <div class="when">10.9 · 21:00–02:00 · ניקה</div>
+    <div class="cd" id="cd">
+      <div><b>--</b><span>שעות</span></div>
+      <div><b>--</b><span>דקות</span></div>
+      <div><b>--</b><span>שניות</span></div>
+    </div>
+    <div class="venue">Music by <b>Guy Pilo</b><br>80s · 90s · Hip Hop · R&amp;B · Hits</div>
+  </div>
+  <div class="actions">
+    <a class="pink" href="photos.html">צלמו והעלו לאלבום</a>
+    <a class="cyan" href="album.html">האלבום המשותף</a>
+  </div>
+  <p class="foot">LET'S RE:PLAY</p>
+</div>
+<script>
+const end=new Date('2026-09-10T21:00:00+03:00').getTime();
+function tick(){
+  let s=Math.max(0,Math.floor((end-Date.now())/1000));
+  const h=Math.floor(s/3600); s%=3600; const m=Math.floor(s/60); s%=60;
+  const p=n=>String(n).padStart(2,'0');
+  document.getElementById('cd').innerHTML='<div><b>'+p(h)+'</b><span>שעות</span></div><div><b>'+p(m)+'</b><span>דקות</span></div><div><b>'+p(s)+'</b><span>שניות</span></div>';
+}
+tick(); setInterval(tick,1000);
+</script>
+</body></html>
