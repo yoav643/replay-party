@@ -16,10 +16,12 @@
     .phone{position:relative;width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:#14001c;border-radius:22px;overflow:hidden;box-shadow:0 0 0 4px #1a0024,0 0 40px rgba(255,45,143,.25)}
     .fx{pointer-events:none;position:absolute;inset:0;z-index:2;overflow:hidden}
     .blob{position:absolute;border-radius:50%;filter:blur(28px);opacity:.45;animation:float 7s ease-in-out infinite}
-    .blob.a{width:180px;height:180px;background:#ff2d8f;top:-40px;right:-30px;animation-delay:0s}
+    .blob.a{width:180px;height:180px;background:#ff2d8f;top:-40px;right:-30px}
     .blob.b{width:140px;height:140px;background:#3de0ff;bottom:80px;left:-40px;animation-delay:-2s}
     .blob.c{width:90px;height:90px;background:#f3c14b;top:40%;left:40%;animation-delay:-4s;opacity:.25}
-    .spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 8px #ff6bb5;animation:rise 4.8s linear infinite}
+    .spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 8px #ffd6ef;animation:rise 4.8s linear infinite}
+    .glitter{position:absolute;width:10px;height:10px;background:#fff;clip-path:polygon(50% 0,61% 35%,100% 50%,61% 65%,50% 100%,39% 65%,0 50%,39% 35%);animation:twinkle 1.8s ease-in-out infinite;filter:drop-shadow(0 0 6px currentColor)}
+    .dust{position:absolute;width:3px;height:3px;border-radius:50%;animation:drift 6s linear infinite}
     .scan{position:absolute;left:0;right:0;height:70px;background:linear-gradient(180deg,transparent,rgba(255,45,143,.16),transparent);animation:scan 5.5s linear infinite}
     .flyer-wrap{position:relative;z-index:1;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;background:#000}
     .flyer{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;animation:glow 3.2s ease-in-out infinite}
@@ -39,17 +41,18 @@
     .actions a::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.35),transparent 70%);transform:translateX(-120%);animation:shine 3.4s ease-in-out infinite}
     .pink{background:linear-gradient(90deg,#ff2d8f,#ff6bb5);color:#1a0018}
     .cyan{background:linear-gradient(90deg,#3de0ff,#7af);color:#041018}
-    .gold{background:linear-gradient(90deg,#f3c14b,#ffe08a);color:#1a1200}
-    .gold{animation:pop 2.8s ease-in-out infinite}
+    .gold{background:linear-gradient(90deg,#f3c14b,#ffe08a);color:#1a1200;animation:pop 2.8s ease-in-out infinite}
     @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-16px) scale(1.12)}}
-    @keyframes rise{0%{transform:translateY(110%);opacity:0}15%{opacity:1}100%{transform:translateY(-120%);opacity:0}}
+    @keyframes rise{0%{transform:translateY(110%) scale(.6);opacity:0}18%{opacity:1}100%{transform:translateY(-130%) scale(1.1);opacity:0}}
+    @keyframes twinkle{0%,100%{transform:scale(.2) rotate(0deg);opacity:.15}45%{transform:scale(1.15) rotate(20deg);opacity:1}70%{transform:scale(.55) rotate(-8deg);opacity:.5}}
+    @keyframes drift{0%{transform:translate3d(0,20px,0) rotate(0);opacity:0}12%{opacity:.9}100%{transform:translate3d(18px,-120vh,0) rotate(180deg);opacity:0}}
     @keyframes scan{0%{top:-80px}100%{top:110%}}
     @keyframes glow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,45,143,0))}50%{filter:drop-shadow(0 0 18px rgba(255,45,143,.55))}}
     @keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(255,45,143,0)}50%{box-shadow:0 0 12px rgba(255,45,143,.35)}}
     @keyframes waze{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
     @keyframes shine{0%,55%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
     @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-    @media (prefers-reduced-motion:reduce){.blob,.spark,.scan,.flyer,.cd div,.waze,.actions a::after,.gold{animation:none}}
+    @media (prefers-reduced-motion:reduce){.blob,.spark,.glitter,.dust,.scan,.flyer,.cd div,.waze,.actions a::after,.gold{animation:none}}
   </style>
 </head>
 <body>
@@ -86,15 +89,45 @@
 </div>
 <script>
 const fx=document.getElementById('fx');
-for(let i=0;i<14;i++){
+const colors=['#fff','#ffe08a','#ff6bb5','#3de0ff','#ffffff'];
+for(let i=0;i<18;i++){
   const s=document.createElement('div');
   s.className='spark';
-  s.style.left=(6+Math.random()*88)+'%';
-  s.style.bottom=(-10-Math.random()*20)+'px';
+  const c=colors[i%colors.length];
+  s.style.left=(4+Math.random()*92)+'%';
+  s.style.bottom=(-8-Math.random()*30)+'px';
+  s.style.background=c;
+  s.style.boxShadow='0 0 10px '+c;
   s.style.animationDelay=(-Math.random()*5)+'s';
-  s.style.animationDuration=(3.6+Math.random()*2.8)+'s';
-  s.style.opacity=String(.35+Math.random()*.5);
+  s.style.animationDuration=(3.2+Math.random()*3)+'s';
   fx.appendChild(s);
+}
+for(let i=0;i<28;i++){
+  const g=document.createElement('div');
+  g.className='glitter';
+  const c=colors[i%colors.length];
+  const size=6+Math.random()*10;
+  g.style.width=size+'px';
+  g.style.height=size+'px';
+  g.style.left=(3+Math.random()*94)+'%';
+  g.style.top=(4+Math.random()*70)+'%';
+  g.style.background=c;
+  g.style.color=c;
+  g.style.animationDelay=(-Math.random()*2)+'s';
+  g.style.animationDuration=(1.2+Math.random()*1.8)+'s';
+  fx.appendChild(g);
+}
+for(let i=0;i<22;i++){
+  const d=document.createElement('div');
+  d.className='dust';
+  const c=colors[i%colors.length];
+  d.style.left=(Math.random()*100)+'%';
+  d.style.bottom=(Math.random()*30)+'px';
+  d.style.background=c;
+  d.style.boxShadow='0 0 6px '+c;
+  d.style.animationDelay=(-Math.random()*6)+'s';
+  d.style.animationDuration=(4.5+Math.random()*4)+'s';
+  fx.appendChild(d);
 }
 const end=new Date('2026-09-10T21:00:00+03:00').getTime();
 function tick(){
