@@ -11,41 +11,90 @@
     h1{text-align:center;color:#ff2d8f;font-family:Oswald,sans-serif}
     .stat{background:#2a0636;border-radius:14px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between}
     .card{background:#2a0636;border-radius:14px;padding:12px;margin:8px 0}
-    a{color:#f3c14b;font-weight:800;text-decoration:none}
+    .stars{color:#f3c14b;margin:6px 0}
+    a,button{font:800 14px Assistant,sans-serif;text-decoration:none}
+    a{color:#f3c14b}
+    .red{width:100%;border:0;border-radius:10px;padding:10px;margin-top:8px;background:#7a2e2e;color:#fff}
+    input{width:100%;padding:12px;border-radius:12px;border:0;font:16px Assistant,sans-serif;margin:10px 0}
+    .pink{width:100%;border:0;border-radius:12px;padding:12px;background:#ff2d8f;color:#120018}
+    #gate,#app{display:none}
+    #gate.on,#app.on{display:block}
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="gate">
+  <h1>ניהול</h1>
+  <input id="pw" type="password" placeholder="סיסמה" />
+  <button class="pink" id="go" type="button">כניסה</button>
+  <p id="err" style="text-align:center;color:#ff8aa8"></p>
+</div>
+<div class="wrap" id="app">
   <h1>חוות דעת</h1>
   <p id="sum" style="text-align:center;color:#c9a8ff"></p>
   <div id="stats"></div>
+  <button class="red" id="delAll" type="button">מחק את כל חוות הדעת</button>
   <div id="list"></div>
   <p style="text-align:center;margin-top:12px"><a href="admin.html">חזרה לניהול</a></p>
 </div>
 <script>
-const ALBUM='vRlN4sX', AUTH='Client-ID 546c25a59c58ad7';
+const PASS='Drtech80', ALBUM='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
 const LABELS=['מוזיקה / DJ','אווירה ווייב','בר ושתייה','המקום','הקהל'];
-(async()=>{
-  const items=[];
-  try{
-    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
-    for(const x of (js.data||[])){
-      const d=String(x.description||'');
-      if(!d.startsWith('REV|')) continue;
-      const p=d.split('|');
-      const name=decodeURIComponent(p[2]||'אורח');
-      const nums=(p[3]||'').split('|').map(Number);
-      const text=decodeURIComponent(p.slice(4).join('|')||'');
-      items.push({name,nums,text});
-    }
-  }catch(e){}
+const gate=document.getElementById('gate'), app=document.getElementById('app');
+function openApp(){ gate.classList.remove('on'); app.classList.add('on'); load(); }
+if(sessionStorage.getItem('replay-admin')==='1') openApp(); else gate.classList.add('on');
+document.getElementById('go').onclick=()=>{
+  if(document.getElementById('pw').value===PASS){ sessionStorage.setItem('replay-admin','1'); openApp(); }
+  else document.getElementById('err').textContent='סיסמה שגויה';
+};
+document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
+let items=[];
+function parseRev(d){
+  const p=String(d||'').split('|');
+  if(p[0]!=='REV') return null;
+  let name='';
+  try{ name=decodeURIComponent(p[2]||'אורח'); }catch(e){ name=p[2]||'אורח'; }
+  const nums=[3,4,5,6,7].map(i=>Number(p[i])||0);
+  let text='';
+  try{ text=decodeURIComponent(p.slice(9).join('|')||''); }catch(e){ text=p.slice(9).join('|'); }
+  return {name,nums,text};
+}
+function draw(){
   document.getElementById('sum').textContent=items.length+' חוות דעת';
   const avg=LABELS.map((_,i)=>{
     const vals=items.map(it=>it.nums[i]).filter(n=>n>0);
     return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'-';
   });
   document.getElementById('stats').innerHTML=LABELS.map((l,i)=>'<div class="stat"><b>'+l+'</b><span>'+avg[i]+' ★</span></div>').join('');
-  document.getElementById('list').innerHTML=items.map(it=>'<div class="card"><b>'+it.name+'</b><div>'+LABELS.map((l,i)=>l+': '+(it.nums[i]||'-')).join(' · ')+'</div>'+(it.text?'<p style="margin-top:6px">'+it.text+'</p>':'')+'</div>').join('')||'<p style="text-align:center">עדיין אין</p>';
-})();
+  document.getElementById('list').innerHTML=items.map(it=>{
+    const stars=LABELS.map((l,i)=>'<div>'+l+': '+'★'.repeat(it.nums[i]||0)+' '+(it.nums[i]||'-')+'</div>').join('');
+    return '<div class="card"><b>'+it.name+'</b><div class="stars">'+stars+'</div>'+(it.text?'<p>'+it.text+'</p>':'')+'<button class="red" data-id="'+it.id+'">מחק חוות דעת</button></div>';
+  }).join('')||'<p style="text-align:center">עדיין אין</p>';
+  document.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>delOne(b.dataset.id));
+}
+async function load(){
+  items=[];
+  try{
+    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+    for(const x of (js.data||[])){
+      const parsed=parseRev(x.description||'');
+      if(parsed) items.push({id:x.id,...parsed});
+    }
+  }catch(e){}
+  draw();
+}
+async function delSilent(id){
+  await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})});
+}
+async function delOne(id){
+  if(!confirm('למחוק חוות דעת זו?')) return;
+  await delSilent(id);
+  setTimeout(load,600);
+}
+document.getElementById('delAll').onclick=async()=>{
+  if(!items.length) return;
+  if(!confirm('למחוק את כל חוות הדעת?')) return;
+  for(const it of items){ try{ await delSilent(it.id); }catch(e){} }
+  setTimeout(load,800);
+};
 </script>
 </body></html>
