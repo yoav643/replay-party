@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>חוות דעת · RE:PLAY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    body{min-height:100vh;background:#120018;font-family:Assistant,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
+    .phone{width:100%;max-width:440px;background:#1a0024;border-radius:24px;padding:18px 16px 22px}
+    h1{text-align:center;font-family:Oswald,sans-serif;color:#ff2d8f}
+    .sub{text-align:center;color:#c9a8ff;margin:6px 0 14px}
+    label{display:block;font-weight:800;margin:12px 0 6px}
+    .opt{font-weight:600;color:#9b86b3;font-size:13px}
+    input,textarea{width:100%;padding:11px;border-radius:12px;border:0;font:16px Assistant,sans-serif}
+    textarea{min-height:100px}
+    .item{background:#2a0636;border-radius:14px;padding:10px;margin-bottom:8px}
+    .stars{display:flex;gap:4px;justify-content:center;direction:ltr}
+    .stars button{width:40px;height:40px;border:0;background:transparent;font-size:26px;color:#4a2a5a}
+    .stars button.on{color:#f3c14b}
+    .send{width:100%;margin-top:12px;border:0;border-radius:14px;padding:14px;font:800 16px Assistant,sans-serif;background:#f3c14b;color:#1a1200}
+    a.back{display:block;text-align:center;margin-top:12px;color:#c9a8ff;font-weight:800;text-decoration:none}
+    #note{text-align:center;margin-top:8px;color:#ffb4c4}
+    .ok{text-align:center;padding:28px 8px}
+  </style>
+</head>
+<body>
+<div class="phone">
+  <h1>HOW WAS IT?</h1>
+  <p class="sub">דרגו את המסיבה של RE:PLAY</p>
+  <div id="form">
+    <label>השם <span class="opt">(לא חובה)</span></label>
+    <input id="name" placeholder="שם או כינוי" />
+    <div id="cats"></div>
+    <label>משוב חופשי <span class="opt">(לא חובה)</span></label>
+    <textarea id="text" placeholder="מה אהבתם, מה אפשר לשפר..."></textarea>
+    <button class="send" id="send" type="button">שליחת חוות דעת</button>
+    <p id="note"></p>
+  </div>
+  <a class="back" href="./">חזרה</a>
+</div>
+<script>
+const HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
+const CATS=[
+  ['music','מוזיקה / DJ'],
+  ['vibe','אווירה ווייב'],
+  ['bar','בר ושתייה'],
+  ['place','המקום'],
+  ['crowd','הקהל']
+];
+const rates={};
+let owner=localStorage.getItem('replay-owner')||('g-'+Math.random().toString(36).slice(2,10));
+localStorage.setItem('replay-owner', owner);
+const box=document.getElementById('cats');
+box.innerHTML=CATS.map(([id,label])=>'<div class="item"><b>'+label+'</b><div class="stars" data-id="'+id+'">'+[1,2,3,4,5].map(n=>'<button type="button" data-n="'+n+'">★</button>').join('')+'</div></div>').join('');
+box.querySelectorAll('.stars').forEach(row=>{
+  row.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
+    const n=Number(btn.dataset.n); rates[row.dataset.id]=n;
+    row.querySelectorAll('button').forEach(b=>b.classList.toggle('on', Number(b.dataset.n)<=n));
+  });
+});
+function tiny(){ const c=document.createElement('canvas'); c.width=8;c.height=8; c.getContext('2d').fillRect(0,0,8,8); return new Promise(r=>c.toBlob(r,'image/jpeg',.4)); }
+document.getElementById('send').onclick=async()=>{
+  const name=document.getElementById('name').value.trim()||'אורח';
+  const text=document.getElementById('text').value.trim();
+  const note=document.getElementById('note');
+  for(const [id,label] of CATS){ if(!rates[id]){ note.textContent='דרגו את כל הנושאים — חסר: '+label; return; } }
+  note.textContent='שולח...';
+  document.getElementById('send').disabled=true;
+  try{
+    const payload=[rates.music,rates.vibe,rates.bar,rates.place,rates.crowd,Date.now()].join('|');
+    const desc='REV|'+owner+'|'+encodeURIComponent(name)+'|'+payload+'|'+encodeURIComponent(text);
+    const fd=new FormData();
+    fd.append('image', new File([await tiny()],'rev.jpg',{type:'image/jpeg'}));
+    fd.append('album', HASH);
+    fd.append('description', desc);
+    const js=await (await fetch('https://api.imgur.com/3/upload',{method:'POST', headers:{Authorization:AUTH}, body:fd})).json();
+    if(!js||!js.success) throw new Error('up');
+    document.getElementById('form').innerHTML='<div class="ok"><h2>תודה!</h2><p>LET\'S RE:PLAY 💜</p></div>';
+  }catch(e){
+    note.textContent='השליחה נכשלה, נסו שוב';
+    document.getElementById('send').disabled=false;
+  }
+};
+</script>
+</body></html>

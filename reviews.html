@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>סטטיסטיקת חוות דעת · RE:PLAY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    body{min-height:100vh;background:#120018;font-family:Assistant,sans-serif;color:#fff;display:flex;justify-content:center;padding:16px}
+    .wrap{width:100%;max-width:440px;background:#1a0024;border-radius:24px;padding:16px}
+    h1{text-align:center;color:#ff2d8f;font-family:Oswald,sans-serif}
+    .stat{background:#2a0636;border-radius:14px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between}
+    .card{background:#2a0636;border-radius:14px;padding:12px;margin:8px 0}
+    a{color:#f3c14b;font-weight:800;text-decoration:none}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>חוות דעת</h1>
+  <p id="sum" style="text-align:center;color:#c9a8ff"></p>
+  <div id="stats"></div>
+  <div id="list"></div>
+  <p style="text-align:center;margin-top:12px"><a href="admin.html">חזרה לניהול</a></p>
+</div>
+<script>
+const ALBUM='vRlN4sX', AUTH='Client-ID 546c25a59c58ad7';
+const LABELS=['מוזיקה / DJ','אווירה ווייב','בר ושתייה','המקום','הקהל'];
+(async()=>{
+  const items=[];
+  try{
+    const js=await (await fetch('https://api.imgur.com/3/album/'+ALBUM+'/images?t='+Date.now(),{headers:{Authorization:AUTH},cache:'no-store'})).json();
+    for(const x of (js.data||[])){
+      const d=String(x.description||'');
+      if(!d.startsWith('REV|')) continue;
+      const p=d.split('|');
+      const name=decodeURIComponent(p[2]||'אורח');
+      const nums=(p[3]||'').split('|').map(Number);
+      const text=decodeURIComponent(p.slice(4).join('|')||'');
+      items.push({name,nums,text});
+    }
+  }catch(e){}
+  document.getElementById('sum').textContent=items.length+' חוות דעת';
+  const avg=LABELS.map((_,i)=>{
+    const vals=items.map(it=>it.nums[i]).filter(n=>n>0);
+    return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'-';
+  });
+  document.getElementById('stats').innerHTML=LABELS.map((l,i)=>'<div class="stat"><b>'+l+'</b><span>'+avg[i]+' ★</span></div>').join('');
+  document.getElementById('list').innerHTML=items.map(it=>'<div class="card"><b>'+it.name+'</b><div>'+LABELS.map((l,i)=>l+': '+(it.nums[i]||'-')).join(' · ')+'</div>'+(it.text?'<p style="margin-top:6px">'+it.text+'</p>':'')+'</div>').join('')||'<p style="text-align:center">עדיין אין</p>';
+})();
+</script>
+</body></html>
