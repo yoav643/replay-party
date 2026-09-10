@@ -15,10 +15,20 @@
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     img,video{width:100%;height:140px;object-fit:cover;display:block;background:#000}
     .item{background:#2a0636;border-radius:12px;overflow:hidden}
+    input{width:100%;padding:12px;border-radius:12px;border:0;font:16px Assistant,sans-serif;margin:10px 0}
+    #gate,#app{display:none}
+    #gate.on,#app.on{display:block}
+    #err{text-align:center;color:#ff8aa8;min-height:20px}
   </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="gate">
+  <h1>ניהול</h1>
+  <input id="pw" type="password" placeholder="סיסמה" />
+  <button class="pink" id="go" type="button">כניסה</button>
+  <p id="err"></p>
+</div>
+<div class="wrap" id="app">
   <h1>ניהול RE:PLAY</h1>
   <a class="pink" href="album.html">אלבום</a>
   <button class="red" id="delAll" type="button">מחק הכל</button>
@@ -27,6 +37,16 @@
   <a href="./" style="color:#c9a8ff">חזרה</a>
 </div>
 <script>
+const PASS='Drtech80';
+const gate=document.getElementById('gate'), app=document.getElementById('app');
+function openApp(){ gate.classList.remove('on'); app.classList.add('on'); load(); }
+if(sessionStorage.getItem('replay-admin')==='1') openApp();
+else gate.classList.add('on');
+document.getElementById('go').onclick=()=>{
+  if(document.getElementById('pw').value===PASS){ sessionStorage.setItem('replay-admin','1'); openApp(); }
+  else document.getElementById('err').textContent='סיסמה שגויה';
+};
+document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('go').click(); });
 const ALBUM='vRlN4sX', HASH='2krb6G4ep4bmbEP', AUTH='Client-ID 546c25a59c58ad7';
 let media=[];
 async function load(){
@@ -51,6 +71,5 @@ async function del(id){
 }
 document.getElementById('delAll').onclick=async()=>{ if(!confirm('למחוק הכל?')) return; for(const it of media){ try{ await delSilent(it.id);}catch(e){} } setTimeout(load,800); };
 async function delSilent(id){ await fetch('https://api.imgur.com/3/album/'+HASH+'/remove_images',{method:'POST', headers:{Authorization:AUTH}, body:new URLSearchParams({ids:id})}); }
-load();
 </script>
 </body></html>
